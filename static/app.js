@@ -12,10 +12,15 @@ async function render(target, work) {
   try { $(target).innerHTML = await work(); }
   catch(e) { $(target).innerHTML = '<div class="error" role="alert">' + esc(e.message) + '</div>'; }
 }
-document.querySelectorAll('[data-tab]').forEach(button => button.onclick = () => {
-  document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b === button));
-  document.querySelectorAll('.tab').forEach(s => s.hidden = s.id !== button.dataset.tab);
-});
+function selectTab() {
+  const requested = location.hash.slice(1);
+  const tab = ['shopping', 'coupons', 'inventory', 'subscriptions'].includes(requested) ? requested : 'shopping';
+  document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab').forEach(s => s.hidden = s.id !== tab);
+}
+document.querySelectorAll('[data-tab]').forEach(button => button.onclick = () => { location.hash = button.dataset.tab; });
+window.addEventListener('hashchange', selectTab);
+selectTab();
 async function shopping() {
   await render('shopping-result', async () => {
     const items = $('shopping-input').value.split('\n').filter(x => x.trim()).map(x => {const [name, quantity = '1'] = x.replace('，', ',').split(',');return {name:name.trim(),quantity:Number(quantity)};});
@@ -30,7 +35,7 @@ $('shopping-form').onsubmit = e => {e.preventDefault();shopping();};
 async function coupons() {
   await render('coupon-result', async () => {
     const d = await api('best_coupon',{amount:Number($('amount').value),platform:$('platform').value || null,category:$('category').value || null});
-    const show = c => c && c.coupons.length ? c.coupons.map(esc).join(' + ')+' · 实付 '+money(c.payable) : '无适用优惠券';
+    const show = c => c && c.coupons.length ? c.coupons.map(id => esc(id)+'（'+esc(couponSources[id])+'）').join(' + ')+' · 实付 '+money(c.payable) : '无适用优惠券';
     return '<div class="card hero"><div class="muted">最优组合预计节省</div><div class="big">'+money(d.best_stack.savings)+'</div><p>'+show(d.best_stack)+'</p></div><div class="card"><h3>最佳单券</h3>'+show(d.best_single)+'</div><div class="card"><h3>7天内到期提醒（全部券）</h3>'+ (d.expiry_warnings.map(c=>'<div class="row"><span>'+esc(c.name)+' <small>'+esc(c.id)+'</small></span><span class="warn">'+c.days_left+'天后到期</span></div>').join('') || '暂无即将到期的券') + '<p>过期券与不满足门槛、平台或类别限制的券不会参与推荐。省钱相同时优先使用临期券。</p></div>';
   });
 }
@@ -38,6 +43,7 @@ $('coupon-form').onsubmit = e => {e.preventDefault();coupons();};
 async function init() {
   try {
     const d = await api('data');
+    couponSources = Object.fromEntries(d.coupons.map(c => [c.id, c.source]));
     $('catalog').innerHTML = d.groceries.map(i=>esc(i.name)+'：'+esc(i.unit)).join('<br>');
     $('platform').innerHTML += d.platforms.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
     await Promise.all([shopping(),coupons(),
@@ -51,4 +57,5 @@ async function init() {
       })]);
   } catch(e) { $('shopping-result').innerHTML = '<div class="error">'+esc(e.message)+'</div>'; }
 }
+let couponSources = {};
 init();

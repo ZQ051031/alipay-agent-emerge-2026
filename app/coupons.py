@@ -34,5 +34,7 @@ def best_coupon(amount, coupons, platform=None, category=None, today=None, warni
     singles = [(c,) for c in eligible]
     groups = [()]
     for size in range(1, len(eligible) + 1):
-        groups.extend(g for g in combinations(eligible, size) if size == 1 or all(c["stackable"] for c in g))
+        groups.extend(g for g in combinations(eligible, size)
+                      if (size == 1 or all(c["stackable"] for c in g))
+                      and len({c["source"] for c in g}) == size)
     return {"best_single": evaluate(min(singles, key=key)) if singles else None, "best_stack": evaluate(min(groups, key=key)), "expiry_warnings": sorted(warnings, key=lambda c: (c["days_left"], c["id"])), "skipped": skipped}

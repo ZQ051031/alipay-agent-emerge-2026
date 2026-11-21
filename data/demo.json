@@ -262,6 +262,7 @@
   "coupons": [
     {
       "id": "c1",
+      "source": "平台满减券",
       "name": "日常满减券",
       "kind": "fixed",
       "value": 5,
@@ -273,6 +274,7 @@
     },
     {
       "id": "c2",
+      "source": "品类折扣券",
       "name": "生鲜九折券",
       "kind": "rate",
       "value": 0.9,
@@ -284,6 +286,7 @@
     },
     {
       "id": "c3",
+      "source": "支付宝支付券",
       "name": "周末叠加券",
       "kind": "fixed",
       "value": 3,
@@ -295,6 +298,7 @@
     },
     {
       "id": "c4",
+      "source": "平台满减券",
       "name": "超市专享券",
       "kind": "fixed",
       "value": 8,
@@ -306,6 +310,7 @@
     },
     {
       "id": "c5",
+      "source": "平台满减券",
       "name": "即将到期券",
       "kind": "fixed",
       "value": 5,
@@ -317,6 +322,7 @@
     },
     {
       "id": "c6",
+      "source": "平台满减券",
       "name": "已过期券",
       "kind": "fixed",
       "value": 20,
@@ -328,6 +334,7 @@
     },
     {
       "id": "c7",
+      "source": "平台满减券",
       "name": "大额满减券",
       "kind": "fixed",
       "value": 25,
@@ -339,6 +346,7 @@
     },
     {
       "id": "c8",
+      "source": "支付宝支付券",
       "name": "家庭福利券",
       "kind": "fixed",
       "value": 6,

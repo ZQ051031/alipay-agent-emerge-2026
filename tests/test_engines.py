@@ -82,11 +82,11 @@ def test_missing_partial_empty_and_quantity():
 
 def coupon(id, value=10, **kwargs):
     return {"id": id, "name": id, "kind": "fixed", "value": value,
-            "threshold": 0, "stackable": True, "expires": "2026-12-01", **kwargs}
+            "threshold": 0, "stackable": True, "source": "平台满减券", "expires": "2026-12-01", **kwargs}
 
 
 def test_coupon_single_stack_expired_and_restrictions():
-    coupons = [coupon("a"), coupon("b", 0.8, kind="rate"), coupon("expired", 90, expires="2026-11-21"),
+    coupons = [coupon("a"), coupon("b", 0.8, kind="rate", source="品类折扣券"), coupon("expired", 90, expires="2026-11-21"),
                coupon("exclusive", 25, stackable=False), coupon("restricted", 80, platform="p1", category="生鲜"),
                coupon("threshold", 100, threshold=101)]
     result = best_coupon(100, coupons, today=TODAY)
@@ -95,6 +95,20 @@ def test_coupon_single_stack_expired_and_restrictions():
     assert result["best_stack"]["coupons"] == ["a", "b"]
     assert set(result["skipped"]) == {"expired", "restricted", "threshold"}
     assert best_coupon(100, coupons, "p1", "生鲜", TODAY)["best_stack"]["payable"] == 0
+
+
+def test_coupon_one_per_source_and_demo_stack():
+    coupons = [coupon("a", 12), coupon("b", 10),
+               coupon("pay", 3, source="支付宝支付券")]
+    result = best_coupon(80, coupons, today=TODAY)
+    assert result["best_stack"]["coupons"] == ["a", "pay"]
+    assert result["best_stack"]["payable"] == 65
+    demo = best_coupon(80, DATA["coupons"], "p1", "生鲜", TODAY)
+    assert demo["best_stack"]["coupons"] == ["c2", "c5", "c8"]
+    assert demo["best_stack"]["payable"] == 61
+    sources = {c["id"]: c["source"] for c in DATA["coupons"]}
+    selected = demo["best_stack"]["coupons"]
+    assert len({sources[c] for c in selected}) == len(selected)
 
 
 def test_coupon_expiry_tie_warning_boundaries_empty_errors():
