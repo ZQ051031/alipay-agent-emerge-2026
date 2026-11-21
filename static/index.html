@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>省钱精算管家 · 家庭省钱工作台</title><link rel="stylesheet" href="/style.css"><style>@font-face{font-family:DemoChinese;src:url('/NotoSansSC-Regular.otf') format('opentype');font-display:swap}body{font-family:DemoChinese,sans-serif}</style><script src="/app.js" defer></script></head>
+<body><aside><div class="brand">省<span>算</span></div><h2>省钱精算管家</h2><p>把每一分，花在值得的地方。</p><nav aria-label="功能导航"><button class="active" data-tab="shopping">01　买菜比价</button><button data-tab="coupons">02　优惠券管家</button><button data-tab="inventory">03　家庭库存</button><button data-tab="subscriptions">04　续费体检</button></nav><div class="aside-bottom">生活好帮手 / 2026<br>本地演示 · 无账户连接</div></aside>
+<main><header><span>HOUSEHOLD SAVINGS BUTLER</span><span class="pill">● 示例数据 · 非真实报价</span></header><div class="intro"><p class="eyebrow">让精打细算，变得简单</p><h1>今天，也为家里省一点。</h1><p>买菜、用券、补货与续费，一站看清家庭开支。</p></div>
+<div class="safety">示例数据｜不会自动付款或下单；所有价格均为估算，请在结算时核实，购买前由您确认。演示日期：2026-11-22</div>
+<section id="shopping" class="tab"><div class="section-head"><h2>一张清单，多家比较</h2><span>01 / 买菜比价</span></div><div class="layout"><form id="shopping-form" class="card"><h3>今天买什么？</h3><p>每行填写「商品名,数量」，最多10行；数量按示例规格计算。</p><label for="shopping-input">购物清单</label><textarea id="shopping-input" rows="6">大米,1
+鸡蛋,2
+番茄,2
+牛奶,1</textarea><button class="primary">帮我算一算 →</button><details><summary>查看20种商品及规格</summary><div id="catalog"></div></details></form><div id="shopping-result" aria-live="polite"></div></div></section>
+<section id="coupons" class="tab" hidden><div class="section-head"><h2>让每张优惠券，都用得刚好</h2><span>02 / 优惠券管家</span></div><div class="layout"><form id="coupon-form" class="card"><h3>这笔订单怎么省？</h3><label for="amount">订单金额（元）</label><input id="amount" type="number" min="0" max="1000000" step=".01" value="80" required><label for="platform">下单平台</label><select id="platform"><option value="">不限平台</option></select><label for="category">订单类别（整单适用）</label><select id="category"><option value="">不限类别</option><option>生鲜</option><option>日用</option></select><button class="primary">匹配最优用券 →</button><p>先折扣后满减；门槛按原价计算，仅标记可叠加的券可组合。</p></form><div id="coupon-result" aria-live="polite"></div></div></section>
+<section id="inventory" class="tab" hidden><div class="section-head"><h2>家中常备，心中有数</h2><span>03 / 家庭库存</span></div><div id="inventory-result"></div></section>
+<section id="subscriptions" class="tab" hidden><div class="section-head"><h2>别让续费，悄悄发生</h2><span>04 / 续费体检</span></div><div id="subscription-result"></div></section>
+<footer>省钱不是少一点生活，而是多一点选择。<span>MOCK DEMO / 无真实交易</span></footer></main></body></html>
