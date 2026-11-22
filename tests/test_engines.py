@@ -68,7 +68,9 @@ def test_missing_partial_empty_and_quantity():
     data["groceries"][0]["prices"]["b"] = None
     result = compare_grocery_prices(basket(), data, TODAY)
     assert result["unavailable"]["b"] == ["米"]
+    assert result["unavailable_platforms"] == [{"platform": "乙", "platform_id": "b", "items": ["米"]}]
     assert len(result["ranked_baskets"]) == 1
+    assert compare_grocery_prices(basket(), market(), TODAY)["unavailable_platforms"] == []
     assert compare_grocery_prices([{"name": "未知"}], data, TODAY)["missing_items"] == ["未知"]
     data["groceries"][0]["prices"]["a"] = None
     assert compare_grocery_prices(basket(), data, TODAY)["missing_items"] == ["米"]
@@ -178,3 +180,17 @@ def test_api_posts_validation_and_sample_labels():
     assert client.post("/api/compare_grocery_prices", json={"items": [{"name": "米", "quantity": 0}]}).status_code == 422
     assert client.post("/api/compare_grocery_prices", json={"items": [{"name": "米"}] * 11}).status_code == 422
     assert client.get("/api/data/unknown").status_code == 404
+
+
+def test_api_unavailable_platforms_use_display_names():
+    result = client.post("/api/compare_grocery_prices", json={"items": [{"name": "大米"}, {"name": "鸡蛋"}]}).json()
+    assert result["unavailable_platforms"] == [{"platform": "线上菜篮C", "platform_id": "p3", "items": ["大米"]}]
+    assert "esc(p.platform)" in client.get("/app.js").text
+
+
+def test_forms_opt_out_of_browser_state_restore():
+    page = client.get("/").text
+    assert '<form id="shopping-form" class="card" autocomplete="off">' in page
+    assert '<form id="coupon-form" class="card" autocomplete="off">' in page
+    script = client.get("/app.js").text
+    assert "if (!$('amount').checkValidity()) throw new Error(amountMessage);" in script

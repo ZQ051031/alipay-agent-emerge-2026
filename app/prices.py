@@ -19,8 +19,9 @@ def compare_grocery_prices(items, data, today=None):
     lines = list(merged.items())
     missing = [n for n, q in lines if n not in catalog or not any(v is not None for v in catalog[n]["prices"].values())]
     unavailable = {p["id"]: [n for n, q in lines if catalog.get(n, {}).get("prices", {}).get(p["id"]) is None] for p in data["platforms"]}
+    unavailable_platforms = [{"platform": p["name"], "platform_id": p["id"], "items": unavailable[p["id"]]} for p in data["platforms"] if unavailable[p["id"]]]
     if not lines or missing:
-        return {"ranked_baskets": [], "best_split": None, "savings": None, "missing_items": missing, "unavailable": unavailable}
+        return {"ranked_baskets": [], "best_split": None, "savings": None, "missing_items": missing, "unavailable": unavailable, "unavailable_platforms": unavailable_platforms}
     n = len(lines)
     full = (1 << n) - 1
     costs = {}
@@ -57,4 +58,4 @@ def compare_grocery_prices(items, data, today=None):
                 sub = (sub - 1) & remaining
         dp = next_dp
     split = {"total": dp[full][0] / 100, "orders": dp[full][1]} if full in dp else None
-    return {"ranked_baskets": ranked, "best_split": split, "savings": round(ranked[-1]["total"] - split["total"], 2) if ranked and split else None, "missing_items": missing, "unavailable": unavailable}
+    return {"ranked_baskets": ranked, "best_split": split, "savings": round(ranked[-1]["total"] - split["total"], 2) if ranked and split else None, "missing_items": missing, "unavailable": unavailable, "unavailable_platforms": unavailable_platforms}
