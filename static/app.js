@@ -1,10 +1,10 @@
 const $ = id => document.getElementById(id);
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => '¥' + Number(n).toFixed(2);
-async function api(path, body) {
+async function api(path, body, invalidMessage = '输入有误：请检查数量、金额或清单行数。') {
   const response = await fetch('/api/' + path, body === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const data = await response.json();
-  if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : '输入有误：请检查数量、金额或清单行数。');
+  if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : invalidMessage);
   return data;
 }
 async function render(target, work) {
@@ -28,13 +28,14 @@ async function shopping() {
     if (!items.length) return '<div class="card">先添加几样需要的商品吧。</div>';
     if (d.missing_items.length) return '<div class="card">未找到商品 / 全部价格不可用：' + d.missing_items.map(esc).join('、') + '。请参考商品目录。</div>';
     const split = d.best_split;
-    return '<div class="card hero"><div class="muted">最优方案 · 含配送费</div><div class="big">' + (split ? money(split.total) : '暂无可配送方案') + '</div><p>较最贵可下单整篮省 ' + (d.savings === null ? '暂无可比较整篮' : money(d.savings)) + '</p></div><div class="card"><h3>各平台整篮排名</h3>' + (d.ranked_baskets.map((b,i) => '<div class="row"><span>'+(i+1)+'　'+esc(b.platform)+'<div class="muted">配送 '+money(b.delivery_fee)+'</div></span><strong>'+money(b.total)+'</strong></div>').join('') || '<p>无完整且达到起送额的整篮</p>') + '</div><div class="card"><h3>最优拆单建议</h3>' + (split ? split.orders.map(o => '<div class="row"><span>'+esc(o.platform)+'<div class="muted">'+o.items.map(i=>esc(i.name)+' × '+i.quantity).join('、')+'</div></span><b>'+money(o.total)+'</b></div>').join('') : '价格缺失或未达到起送额，不建议凑单。') + '<p>逐商品分配，计入每单配送费与起送限制；不额外加购凑单。</p><details><summary>价格缺失 / 无法组成整篮的平台</summary>'+Object.entries(d.unavailable).filter(([p,n])=>n.length).map(([p,n])=>esc(p)+'：'+n.map(esc).join('、')).join('<br>')+'</details></div>';
+    return '<div class="card hero"><div class="muted">最优方案 · 含配送费</div><div class="big">' + (split ? money(split.total) : '暂无可配送方案') + '</div><p>较最贵可下单整篮省 ' + (d.savings === null ? '暂无可比较整篮' : money(d.savings)) + '</p></div><div class="card"><h3>各平台整篮排名</h3>' + (d.ranked_baskets.map((b,i) => '<div class="row"><span>'+(i+1)+'　'+esc(b.platform)+'<div class="muted">配送 '+money(b.delivery_fee)+'</div></span><strong>'+money(b.total)+'</strong></div>').join('') || '<p>无完整且达到起送额的整篮</p>') + '</div><div class="card"><h3>最优拆单建议</h3>' + (split ? split.orders.map(o => '<div class="row"><span>'+esc(o.platform)+'<div class="muted">'+o.items.map(i=>esc(i.name)+' × '+i.quantity).join('、')+'</div></span><b>'+money(o.total)+'</b></div>').join('') : '价格缺失或未达到起送额，不建议凑单。') + '<p>逐商品分配，计入每单配送费与起送限制；不额外加购凑单。</p><details><summary>价格缺失 / 无法组成整篮的平台</summary>'+(d.unavailable_platforms.map(p=>esc(p.platform)+'：'+p.items.map(esc).join('、')).join('<br>') || '各平台均有报价')+'</details></div>';
   });
 }
 $('shopping-form').onsubmit = e => {e.preventDefault();shopping();};
 async function coupons() {
   await render('coupon-result', async () => {
-    const d = await api('best_coupon',{amount:Number($('amount').value),platform:$('platform').value || null,category:$('category').value || null});
+    if (!$('amount').checkValidity()) throw new Error(amountMessage);
+    const d = await api('best_coupon',{amount:Number($('amount').value),platform:$('platform').value || null,category:$('category').value || null}, amountMessage);
     const show = c => c && c.coupons.length ? c.coupons.map(id => esc(id)+'（'+esc(couponSources[id])+'）').join(' + ')+' · 实付 '+money(c.payable) : '无适用优惠券';
     return '<div class="card hero"><div class="muted">最优组合预计节省</div><div class="big">'+money(d.best_stack.savings)+'</div><p>'+show(d.best_stack)+'</p></div><div class="card"><h3>最佳单券</h3>'+show(d.best_single)+'</div><div class="card"><h3>7天内到期提醒（全部券）</h3>'+ (d.expiry_warnings.map(c=>'<div class="row"><span>'+esc(c.name)+' <small>'+esc(c.id)+'</small></span><span class="warn">'+c.days_left+'天后到期</span></div>').join('') || '暂无即将到期的券') + '<p>过期券与不满足门槛、平台或类别限制的券不会参与推荐。省钱相同时优先使用临期券。</p></div>';
   });
@@ -58,4 +59,5 @@ async function init() {
   } catch(e) { $('shopping-result').innerHTML = '<div class="error">'+esc(e.message)+'</div>'; }
 }
 let couponSources = {};
+const amountMessage = '订单金额须为0至1000000元之间的数字，最多两位小数。';
 init();
